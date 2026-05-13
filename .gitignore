@@ -6,4 +6,6 @@
 _deps/
 build/
 cmake-build*/
+build_phase1*/
 compile_commands.json
+python/omnihand_2025/__pycache__/
