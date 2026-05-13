@@ -154,5 +154,6 @@ PYBIND11_MODULE(omnihand_2025_core, m) {
       .def("set_current_report_period", &AgibotHandO10::SetCurrentReportPeriod)
       .def("set_all_current_report_periods", &AgibotHandO10::SetAllCurrentReportPeriod)
 #endif
-      .def("show_data_details", &AgibotHandO10::ShowDataDetails);
+    .def("is_initialized", &AgibotHandO10::Init)
+    .def("show_data_details", &AgibotHandO10::ShowDataDetails);
 }

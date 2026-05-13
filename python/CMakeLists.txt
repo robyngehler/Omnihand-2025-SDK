@@ -35,17 +35,35 @@ add_custom_command(
   TARGET ${CUR_TARGET_NAME}
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:omnihand2025> ${PYTHON_PKG_DIR}/omnihand_2025/
-  COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/thirdParty/usbcanfd_libusb_x64_1.0.10_250328/libusbcanfd.so.1.0.10 ${PYTHON_PKG_DIR}/omnihand_2025/
-  COMMAND ${CMAKE_COMMAND} -E create_symlink libusbcanfd.so.1.0.10 ${PYTHON_PKG_DIR}/omnihand_2025/libusbcanfd.so.1
-  COMMAND ${CMAKE_COMMAND} -E create_symlink libusbcanfd.so.1.0.10 ${PYTHON_PKG_DIR}/omnihand_2025/libusbcanfd.so
 )
 
-add_custom_target(
-  create_python_pkg ALL
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${PYTHON_PKG_DIR}/omnihand_2025
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/omnihand_2025 ${PYTHON_PKG_DIR}/omnihand_2025
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/setup.py ${CMAKE_CURRENT_SOURCE_DIR}/pyproject.toml ${CMAKE_CURRENT_SOURCE_DIR}/MANIFEST.in ${PYTHON_PKG_DIR}
-  COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/VERSION ${PYTHON_PKG_DIR}/VERSION
-  COMMAND ${Python3_EXECUTABLE} -m build --wheel
-  WORKING_DIRECTORY ${PYTHON_PKG_DIR}
-  DEPENDS ${CUR_TARGET_NAME})
+if(OMNIHAND_CAN_DRIVER STREQUAL "zlg")
+  add_custom_command(
+    TARGET ${CUR_TARGET_NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/thirdParty/usbcanfd_libusb_x64_1.0.10_250328/libusbcanfd.so.1.0.10 ${PYTHON_PKG_DIR}/omnihand_2025/
+    COMMAND ${CMAKE_COMMAND} -E create_symlink libusbcanfd.so.1.0.10 ${PYTHON_PKG_DIR}/omnihand_2025/libusbcanfd.so.1
+    COMMAND ${CMAKE_COMMAND} -E create_symlink libusbcanfd.so.1.0.10 ${PYTHON_PKG_DIR}/omnihand_2025/libusbcanfd.so
+  )
+endif()
+
+if(BUILD_FOUND AND SETUPTOOLS_FOUND AND WHEEL_FOUND)
+  add_custom_target(
+    create_python_pkg ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${PYTHON_PKG_DIR}/omnihand_2025
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/omnihand_2025 ${PYTHON_PKG_DIR}/omnihand_2025
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/setup.py ${CMAKE_CURRENT_SOURCE_DIR}/pyproject.toml ${CMAKE_CURRENT_SOURCE_DIR}/MANIFEST.in ${PYTHON_PKG_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/VERSION ${PYTHON_PKG_DIR}/VERSION
+    COMMAND ${Python3_EXECUTABLE} -m build --wheel
+    WORKING_DIRECTORY ${PYTHON_PKG_DIR}
+    DEPENDS ${CUR_TARGET_NAME})
+else()
+  add_custom_target(
+    create_python_pkg ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${PYTHON_PKG_DIR}/omnihand_2025
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/omnihand_2025 ${PYTHON_PKG_DIR}/omnihand_2025
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/setup.py ${CMAKE_CURRENT_SOURCE_DIR}/pyproject.toml ${CMAKE_CURRENT_SOURCE_DIR}/MANIFEST.in ${PYTHON_PKG_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/VERSION ${PYTHON_PKG_DIR}/VERSION
+    WORKING_DIRECTORY ${PYTHON_PKG_DIR}
+    DEPENDS ${CUR_TARGET_NAME})
+endif()

@@ -8,7 +8,9 @@
 #include <iostream>
 
 #include "can_bus_device/socket_can/c_can_bus_device_socket_can.h"
+#if OMNIHAND_ENABLE_ZLG
 #include "can_bus_device/zlg_usb_canfd/c_zlg_usbcanfd_sdk.h"
+#endif
 
 #define CANID_WRITE_FLAG 0x01
 #define CANID_READ_FLAG 0x00
@@ -30,11 +32,31 @@ struct convert<AgibotHandCanO10::Options> {
 };
 }  // namespace YAML
 
+namespace {
+
+constexpr size_t kActiveJointCount = DEGREE_OF_FREEDOM;
+
+bool HasExpectedMotorCount(const std::vector<int16_t>& motor_positions) {
+  if (motor_positions.size() == kActiveJointCount) {
+    return true;
+  }
+  std::cerr << "Unexpected actuator vector size: expected " << kActiveJointCount
+            << ", got " << motor_positions.size() << std::endl;
+  return false;
+}
+
+}  // namespace
+
 AgibotHandCanO10::AgibotHandCanO10(unsigned char canfd_id) {
   Options options;
+  options.can_driver = OMNIHAND_DEFAULT_CAN_DRIVER;
 
   if (options.can_driver == "zlg") {
+#if OMNIHAND_ENABLE_ZLG
     canfd_device_ = std::make_unique<ZlgUsbcanfdSDK>(canfd_id);
+#else
+    throw std::invalid_argument("ZLG backend requested, but this build was configured without ZLG support.");
+#endif
   } else if (options.can_driver == "socket") {
     canfd_device_ = std::make_unique<CanBusDeviceSocketCan>();
   } else {
@@ -184,6 +206,11 @@ double AgibotHandCanO10::GetActiveJointAngle(unsigned char joint_motor_index) {
 
     // 获取所有电机位置
     std::vector<int16_t> all_motor_posi = GetAllJointMotorPosi();
+    if (!HasExpectedMotorCount(all_motor_posi)) {
+      std::cerr << "Failed to read all actuator positions before converting joint angle."
+                << std::endl;
+      return 0.0;
+    }
 
     // 转换为int向量供运动学求解器使用
     std::vector<int> motor_positions(all_motor_posi.begin(), all_motor_posi.end());
@@ -218,6 +245,11 @@ void AgibotHandCanO10::SetAllActiveJointAngles(std::vector<double> vec_angle) {
 std::vector<double> AgibotHandCanO10::GetAllActiveJointAngles() {
   // 获取所有电机位置
   std::vector<int16_t> motor_posi = GetAllJointMotorPosi();
+  if (!HasExpectedMotorCount(motor_posi)) {
+    std::cerr << "Failed to read a complete actuator vector for active-joint conversion."
+              << std::endl;
+    return {};
+  }
 
   // 转换为int向量供运动学求解器使用
   std::vector<int> motor_positions(motor_posi.begin(), motor_posi.end());
@@ -228,6 +260,11 @@ std::vector<double> AgibotHandCanO10::GetAllActiveJointAngles() {
 
 std::vector<double> AgibotHandCanO10::GetAllJointAngles() {
   std::vector<double> active_joint_angles = GetAllActiveJointAngles();
+  if (active_joint_angles.size() != kActiveJointCount) {
+    std::cerr << "Failed to read a complete active-joint vector for full joint conversion."
+              << std::endl;
+    return {};
+  }
   return kinematics_solver_ptr_->GetAllJointPos(active_joint_angles);
 }
 

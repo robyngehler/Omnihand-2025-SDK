@@ -7,6 +7,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # Some option
 option(BUILD_PYTHON_BINDING "Build Python binding" ON)
 option(BUILD_CPP_EXAMPLES "Build CPP examples" ON)
+set(OMNIHAND_CAN_DRIVER "zlg" CACHE STRING "Default CAN driver backend: zlg or socket")
+set_property(CACHE OMNIHAND_CAN_DRIVER PROPERTY STRINGS zlg socket)
 
 # Some necessary settings
 set(CMAKE_CXX_STANDARD 20)
