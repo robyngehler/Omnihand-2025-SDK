@@ -30,13 +30,13 @@ target_link_libraries(
           yaml-cpp::yaml-cpp)
 
 if(OMNIHAND_CAN_DRIVER STREQUAL "zlg")
-  if(NOT USER_PATH)
-    set(USER_PATH ${PROJECT_SOURCE_DIR}/thirdParty/usbcanfd_libusb_x64_1.0.10_250328)
+  find_path(THIRD_PARTY_PATH zcan.h HINTS ${OMNIHAND_ZLG_EFFECTIVE_PATH})
+  if(NOT THIRD_PARTY_PATH)
+    message(FATAL_ERROR "Cannot locate zcan.h for the ZLG backend. Set OMNIHAND_ZLG_SDK_PATH to the vendor SDK directory.")
   endif()
 
-  find_path(THIRD_PARTY_PATH zcan.h HINTS ${USER_PATH})
-  if(NOT THIRD_PARTY_PATH)
-    message(FATAL_ERROR "Cannot locate zcan.h for the ZLG backend. Set USER_PATH to the vendor SDK directory.")
+  if(NOT EXISTS "${THIRD_PARTY_PATH}/libusbcanfd.so")
+    message(FATAL_ERROR "Cannot locate libusbcanfd.so for the ZLG backend under ${THIRD_PARTY_PATH}.")
   endif()
 
   target_include_directories(
@@ -70,6 +70,6 @@ install(FILES implementation/c_agibot_hand_can/c_agibot_hand_can.h DESTINATION $
 install(FILES implementation/c_agibot_hand_rs/c_agibot_hand_rs.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/implementation/c_agibot_hand_rs)
 
 if(OMNIHAND_CAN_DRIVER STREQUAL "zlg")
-  install(FILES ${PROJECT_SOURCE_DIR}/thirdParty/usbcanfd_libusb_x64_1.0.10_250328/libusbcanfd.so
-                ${PROJECT_SOURCE_DIR}/thirdParty/usbcanfd_libusb_x64_1.0.10_250328/libusbcanfd.so.1.0.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+  install(FILES ${THIRD_PARTY_PATH}/libusbcanfd.so
+                ${THIRD_PARTY_PATH}/libusbcanfd.so.1.0.10 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()

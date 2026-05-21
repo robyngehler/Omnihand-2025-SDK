@@ -27,6 +27,18 @@ Supports both CANFD communication interfaces
 - Build Tool: CMake 3.24 or higher
 - Python: 3.10 or higher
 
+### Local aarch64/Tegra Note
+
+This repository is also used on Jetson `aarch64` hosts with Linux `5.15.*-tegra`, but that is a repo-local integration path rather than the upstream x86_64 reference path documented above.
+
+For the repo-local Jetson flow:
+
+- the supported local baseline is `OMNIHAND_CAN_DRIVER=socket`,
+- the bundled `thirdParty/usbcanfd_libusb_x64_1.0.10_250328` package must not be used as the default Jetson backend,
+- and `OMNIHAND_CAN_DRIVER=zlg` on `aarch64` requires an explicit native ZLG SDK directory via `-DOMNIHAND_ZLG_SDK_PATH=/path/to/sdk`.
+
+If no native `aarch64` ZLG userspace package is available, use the SocketCAN backend instead.
+
 ### Installation
 
 Choose between source compilation or pre-compiled package installation.
@@ -43,6 +55,33 @@ Execute the following commands in the project root directory:
 ```
 
 The DBUILD_PYTHON_BINDING option is for building Python binding modules, and DBUILD_CPP_EXAMPLES is for building C++ example code.
+
+#### Repo-Local Jetson aarch64 Build
+
+On Jetson and other `aarch64` Linux hosts, use the SocketCAN backend explicitly:
+
+```bash
+./build.sh -DCMAKE_BUILD_TYPE=Release \
+           -DCMAKE_INSTALL_PREFIX=./build/install \
+           -DBUILD_PYTHON_BINDING=ON \
+           -DBUILD_CPP_EXAMPLES=OFF \
+           -DBUILD_ROS_NODE=OFF \
+           -DOMNIHAND_CAN_DRIVER=socket
+```
+
+Do not rely on the bundled `thirdParty/usbcanfd_libusb_x64_1.0.10_250328` package for this build.
+
+If you have a supplier-provided native `aarch64` ZLG SDK and intentionally want the ZLG backend, configure it explicitly:
+
+```bash
+./build.sh -DCMAKE_BUILD_TYPE=Release \
+           -DCMAKE_INSTALL_PREFIX=./build/install \
+           -DBUILD_PYTHON_BINDING=ON \
+           -DBUILD_CPP_EXAMPLES=OFF \
+           -DBUILD_ROS_NODE=OFF \
+           -DOMNIHAND_CAN_DRIVER=zlg \
+           -DOMNIHAND_ZLG_SDK_PATH=/path/to/aarch64/zlg/sdk
+```
 
 #### Pre-compiled Package Installation
 

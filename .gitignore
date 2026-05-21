@@ -9,3 +9,12 @@ cmake-build*/
 build_phase1*/
 compile_commands.json
 python/omnihand_2025/__pycache__/
+thirdParty/usbcanfd200_400u_2.10/*.ko
+thirdParty/usbcanfd200_400u_2.10/*.mod
+thirdParty/usbcanfd200_400u_2.10/*.mod.c
+thirdParty/usbcanfd200_400u_2.10/*.mod.o
+thirdParty/usbcanfd200_400u_2.10/*.o
+thirdParty/usbcanfd200_400u_2.10/Module.symvers
+thirdParty/usbcanfd200_400u_2.10/modules.order
+thirdParty/usbcanfd200_400u_2.10/.*.cmd
+thirdParty/usbcanfd200_400u_2.10/.*.d

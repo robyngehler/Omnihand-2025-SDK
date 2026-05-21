@@ -16,6 +16,9 @@
 #define CMD_CAN0_UP "sudo ifconfig can0 up"
 #define CMD_CAN0_DOWN "sudo ifconfig can0 down"
 
+#define OMNIHAND_SOCKETCAN_INTERFACE_ENV "OMNIHAND_SOCKETCAN_IFACE"
+#define OMNIHAND_SOCKETCAN_DEFAULT_INTERFACE "can0"
+
 #include "../c_can_bus_device.h"
 
 /**

@@ -10,6 +10,7 @@
 
 #include "c_can_bus_device_socket_can.h"
 
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 
@@ -49,15 +50,27 @@ int CanBusDeviceSocketCan::OpenDevice() {
   // TODO 发送和接收的CAN socket需要区分开吗？单CAN socket也可以双向通信
   /*创建socket*/
   fd_sock_ = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+  if (fd_sock_ < 0) {
+    return -1;
+  }
 
   /*设置为非阻塞*/
   int flags = fcntl(fd_sock_, F_GETFL, 0);
   fcntl(fd_sock_, F_SETFL, flags | O_NONBLOCK);
 
-  /*指定can0设备，获取设备索引*/
+  const char* interface_name = std::getenv(OMNIHAND_SOCKETCAN_INTERFACE_ENV);
+  if (interface_name == nullptr || interface_name[0] == '\0') {
+    interface_name = OMNIHAND_SOCKETCAN_DEFAULT_INTERFACE;
+  }
+
+  /*指定socketcan设备，获取设备索引*/
   struct ifreq ifr {};
-  strcpy(ifr.ifr_name, "can0");
-  ioctl(fd_sock_, SIOCGIFINDEX, &ifr);
+  strncpy(ifr.ifr_name, interface_name, IFNAMSIZ - 1);
+  ifr.ifr_name[IFNAMSIZ - 1] = '\0';
+  if (ioctl(fd_sock_, SIOCGIFINDEX, &ifr) < 0) {
+    std::cerr << "Failed to resolve SocketCAN interface '" << interface_name << "'" << std::endl;
+    return -1;
+  }
 
   /*地址*/
   struct sockaddr_can addr {};
@@ -83,6 +96,9 @@ int CanBusDeviceSocketCan::OpenDevice() {
   */
 
   int bindRes = bind(fd_sock_, (struct sockaddr *)&addr, sizeof(addr));
+  if (bindRes < 0) {
+    std::cerr << "Failed to bind SocketCAN interface '" << interface_name << "'" << std::endl;
+  }
   return bindRes;
 }
 

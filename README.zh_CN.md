@@ -27,6 +27,18 @@ OmniHand 灵动款 2025 是一款紧凑型高自由度交互灵巧手，具有`1
 - 构建工具：CMake 3.24 或更高版本
 - Python：3.10 或更高版本
 
+### 本仓库本地 aarch64/Tegra 说明
+
+本仓库也会在 Jetson `aarch64` 主机和 Linux `5.15.*-tegra` 内核上使用，但这属于仓库本地集成路径，不等同于上面的上游 `x86_64` 参考环境。
+
+对于仓库本地 Jetson 路径：
+
+- 默认本地基线应使用 `OMNIHAND_CAN_DRIVER=socket`，
+- 不应把打包在仓库里的 `thirdParty/usbcanfd_libusb_x64_1.0.10_250328` 当作 Jetson 默认后端，
+- 如果要在 `aarch64` 上使用 `zlg` 后端，必须显式提供原生 ZLG SDK 路径：`-DOMNIHAND_ZLG_SDK_PATH=/path/to/sdk`。
+
+如果没有原生 `aarch64` ZLG 用户态 SDK，请改用 SocketCAN 后端。
+
 ### 安装
 
 可以选择源码编译安装或者预编译包安装。
@@ -43,6 +55,33 @@ OmniHand 灵动款 2025 是一款紧凑型高自由度交互灵巧手，具有`1
 ```
 
 DBUILD_PYTHON_BINDING 选项用于构建 Python 绑定模块，DBUILD_CPP_EXAMPLES 选项用于构建 C++ 示例代码。
+
+#### 仓库本地 Jetson aarch64 构建
+
+在 Jetson 或其他 `aarch64` Linux 主机上，请显式使用 SocketCAN 后端：
+
+```bash
+./build.sh -DCMAKE_BUILD_TYPE=Release \
+           -DCMAKE_INSTALL_PREFIX=./build/install \
+           -DBUILD_PYTHON_BINDING=ON \
+           -DBUILD_CPP_EXAMPLES=OFF \
+           -DBUILD_ROS_NODE=OFF \
+           -DOMNIHAND_CAN_DRIVER=socket
+```
+
+此路径不要依赖仓库内置的 `thirdParty/usbcanfd_libusb_x64_1.0.10_250328`。
+
+如果你已经拿到供应商提供的原生 `aarch64` ZLG SDK，并且确实要使用 `zlg` 后端，请显式配置：
+
+```bash
+./build.sh -DCMAKE_BUILD_TYPE=Release \
+           -DCMAKE_INSTALL_PREFIX=./build/install \
+           -DBUILD_PYTHON_BINDING=ON \
+           -DBUILD_CPP_EXAMPLES=OFF \
+           -DBUILD_ROS_NODE=OFF \
+           -DOMNIHAND_CAN_DRIVER=zlg \
+           -DOMNIHAND_ZLG_SDK_PATH=/path/to/aarch64/zlg/sdk
+```
 
 #### 预编译包安装
 

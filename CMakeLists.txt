@@ -4,11 +4,37 @@ project(omni_hand_2025 CXX)
 # Set cmake path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" OMNIHAND_SYSTEM_PROCESSOR)
+set(OMNIHAND_AARCH64_ARCHES aarch64 arm64)
+
+set(OMNIHAND_DEFAULT_CAN_DRIVER_VALUE "zlg")
+if(OMNIHAND_SYSTEM_PROCESSOR IN_LIST OMNIHAND_AARCH64_ARCHES)
+  set(OMNIHAND_DEFAULT_CAN_DRIVER_VALUE "socket")
+endif()
+
 # Some option
 option(BUILD_PYTHON_BINDING "Build Python binding" ON)
 option(BUILD_CPP_EXAMPLES "Build CPP examples" ON)
-set(OMNIHAND_CAN_DRIVER "zlg" CACHE STRING "Default CAN driver backend: zlg or socket")
+option(BUILD_ROS_NODE "Build ROS2 node packages" ON)
+set(OMNIHAND_CAN_DRIVER "${OMNIHAND_DEFAULT_CAN_DRIVER_VALUE}" CACHE STRING "Default CAN driver backend: zlg or socket")
 set_property(CACHE OMNIHAND_CAN_DRIVER PROPERTY STRINGS zlg socket)
+set(OMNIHAND_ZLG_SDK_PATH "" CACHE PATH "Path to a ZLG userspace SDK directory containing zcan.h and libusbcanfd.so")
+
+set(OMNIHAND_ZLG_BUNDLED_SDK_PATH "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/usbcanfd_libusb_x64_1.0.10_250328")
+set(OMNIHAND_ZLG_EFFECTIVE_PATH "")
+
+if(OMNIHAND_CAN_DRIVER STREQUAL "zlg")
+  if(OMNIHAND_ZLG_SDK_PATH)
+    set(OMNIHAND_ZLG_EFFECTIVE_PATH "${OMNIHAND_ZLG_SDK_PATH}")
+  elseif(OMNIHAND_SYSTEM_PROCESSOR IN_LIST OMNIHAND_AARCH64_ARCHES)
+    message(FATAL_ERROR
+      "OMNIHAND_CAN_DRIVER=zlg requires an explicit aarch64-compatible ZLG SDK path on ${CMAKE_SYSTEM_PROCESSOR}. "
+      "The bundled thirdParty/usbcanfd_libusb_x64_1.0.10_250328 package is x86_64-only. "
+      "Use -DOMNIHAND_CAN_DRIVER=socket for the repo-local Jetson flow, or provide -DOMNIHAND_ZLG_SDK_PATH=/path/to/aarch64/zlg/sdk.")
+  else()
+    set(OMNIHAND_ZLG_EFFECTIVE_PATH "${OMNIHAND_ZLG_BUNDLED_SDK_PATH}")
+  endif()
+endif()
 
 # Some necessary settings
 set(CMAKE_CXX_STANDARD 20)
@@ -70,7 +96,10 @@ if(BUILD_PYTHON_BINDING)
 endif()
 
 add_subdirectory(src)
-add_subdirectory(node)
+
+if(BUILD_ROS_NODE)
+  add_subdirectory(node)
+endif()
 
 if(BUILD_PYTHON_BINDING)
   add_subdirectory(python)
